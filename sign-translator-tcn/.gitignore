@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+*.log
+.venv/
+.build/
+.env
+.env.*
+portable-export/
+Ultralytics/
+*.zip
+data/yolo-runtime/
+data/yolo26-runtime/
+data/yolo-config/

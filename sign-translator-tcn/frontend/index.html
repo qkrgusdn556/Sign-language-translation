@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>한국 수어 TCN 실험실</title>
+    <link rel="stylesheet" href="/frontend/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="app-header">
+        <div><p class="eyebrow">한국 수어 · 실험 모델</p><h1>TCN 연속 인식</h1></div>
+        <a class="live-link" href="/frontend/live.html">카메라·문장 전용 화면 ↗</a><span id="privacyBadge" class="local-badge">외부 전송 없음 · 로컬 처리</span>
+      </header>
+      <section class="stage" aria-label="카메라 인식 화면">
+        <div class="video-wrap">
+          <video id="camera" playsinline autoplay muted></video>
+          <canvas id="overlay" aria-hidden="true"></canvas>
+          <div id="cameraEmpty"><span class="camera-symbol" aria-hidden="true">◉</span><strong>카메라 대기 중</strong></div>
+          <span id="faceState" hidden>어깨 대기</span><label class="overlay-option"><input id="overlayToggle" type="checkbox" checked /> 관절·손 박스 표시</label>
+          <label class="overlay-option precision-option"><input id="precisionTracking" type="checkbox" checked /><span id="precisionLabel">손 정밀 추적</span></label>
+        </div>
+
+        <aside class="result-panel">
+          <div>
+            <p class="eyebrow">수어 후보</p>
+            <h2 id="prediction" aria-live="polite">대기 중</h2>
+            <p id="confidence">모델 연결 대기</p>
+          </div>
+          <div>
+            <div class="meter-label"><span>비교 점수</span><span id="nearestSample" class="nearest-sample">비교 샘플 없음</span><strong id="similarity">0%</strong></div>
+            <div class="meter" aria-hidden="true"><span id="confidenceBar"></span></div>
+            <p class="model-note">시험 모델 · 연결 동작 / 비수어 구간 미학습</p>
+          </div>
+        </aside>
+      </section>
+
+      <section class="sentence-panel" aria-labelledby="sentenceTitle">
+        <div class="section-head">
+          <label for="recognizerMode">인식 방식
+            <select id="recognizerMode"><option value="tcn">TCN 연속 · 실험</option><option value="dtw">DTW 비교</option></select>
+          </label>
+          <span id="tcnStatus" role="status">TCN 연결 중</span>
+          <button id="trainTcnBtn" type="button">TCN 학습</button>
+        </div>
+        <div class="section-head">
+          <div><p class="eyebrow">인식 문장</p><h2 id="sentenceTitle">문장 조합</h2></div>
+          <div class="sentence-actions">
+            <fieldset class="speech-style">
+              <legend>말투</legend>
+              <label><input id="politeStyle" type="radio" name="speechStyle" value="polite" checked /> 존댓말</label>
+              <label><input id="casualStyle" type="radio" name="speechStyle" value="casual" /> 반말</label>
+            </fieldset>
+            <button id="polishSentenceBtn" type="button" disabled hidden>문장 보정</button>
+            <button id="speakSentenceBtn" type="button" aria-keyshortcuts="Enter" disabled>문장 읽기 · Enter</button>
+            <button id="clearSentenceBtn" type="button" disabled>문장 지우기</button>
+          </div>
+        </div>
+        <div class="fingerspell-controls">
+          <label>지문자 방식<select id="fingerspellMethod"><option value="consensus">YOLO + 관절 교차 확인</option><option value="joints">관절 비교 단독</option><option value="yolo">YOLO 단독 · 관절 비교 안 함</option></select></label>
+          <label><input id="autoFingerspell" type="checkbox" checked /> 자동 지문자 · 실험</label>
+          <button id="fingerspellStart" type="button">지문자 입력</button>
+          <button id="fingerspellFinish" type="button" disabled>입력 완료</button>
+          <button id="fingerspellBackspace" type="button" disabled aria-label="자모 하나 삭제">⌫</button>
+          <button id="fingerspellRepeat" type="button" disabled>같은 글자 다시</button>
+          <button id="fingerspellCancel" type="button" disabled>취소</button>
+          <output id="fingerspellText" aria-live="polite"></output>
+          <span id="fingerspellStatus" role="status">일반 수어 모드</span>
+        </div>
+        <div class="sentence-output">
+          <p class="sentence-label">인식 원문</p>
+          <p id="sentenceText" class="sentence-text" role="status" aria-live="polite">대기 중</p>
+          <p id="sentenceSpeechStatus" role="status" style="font-size:13px;color:#a8c8b8">Enter를 누르면 문장을 읽고 비웁니다.</p>
+        </div>
+        <div class="sentence-output">
+          <p class="sentence-label">다듬은 문장</p>
+          <p id="polishedSentenceText" class="sentence-text" role="status" aria-live="polite">대기 중</p>
+          <label><input id="geminiEnabled" type="checkbox" /> Gemini 자동 보정 · 인식 텍스트 Google 전송 동의</label>
+          <p class="sentence-label">인식·한글 조합은 즉시 표시하며, 입력이 0.7초 멈추면 자동으로 AI 보정합니다. Enter는 현재 표시 문장을 읽고 비웁니다.</p>
+          <p id="geminiStatus" role="status">Gemini 연결 확인 중</p>
+          <details><summary>Gemini API 설정</summary>
+            <div class="gemini-settings">
+              <label>API 키<input id="geminiKey" type="password" autocomplete="off" maxlength="256" /></label>
+              <label>모델<input id="geminiModel" type="text" value="gemini-3.6-flash" maxlength="87" /></label>
+              <button id="geminiConnect" type="button">API 키 연결</button>
+            </div>
+            <p>연결한 뒤에는 키를 비워 두고 모델명만 바꿔 연결할 수 있습니다.</p>
+            <p>키는 서버 메모리에만 보관됩니다. 영상·관절은 보내지 않으며, 인식 텍스트는 Google API 처리 정책과 사용 요금이 적용됩니다.</p>
+          </details>
+        </div>
+      </section>
+
+      <section class="controls" aria-label="학습 및 기록 도구">
+        <div class="control-group">
+          <label for="labelInput">수어 이름</label>
+          <input id="labelInput" type="text" value="안녕하세요" maxlength="40" autocomplete="off" />
+        </div>
+
+        <div class="button-row">
+          <button id="startBtn" type="button">카메라 시작</button>
+          <button id="sampleBtn" type="button" disabled>샘플 저장</button>
+          <button id="recordBtn" type="button" disabled>2초 동작 수집</button>
+        </div>
+        <label class="capture-consent"><input id="shareMotionVideo" type="checkbox" checked /> 동작 원본 영상도 공동 저장 · SLRT 학습용</label>
+        <div class="button-row"><button id="restPoseSave" type="button" disabled>대기 자세 저장</button><button id="restPoseRecord" type="button" disabled>2초 대기 자세 수집</button></div>
+        <label class="capture-consent"><input id="restGuardToggle" type="checkbox" checked /> 대기 자세 출력 차단</label>
+        <p id="restState" role="status">대기 자세 미등록</p>
+        <div class="button-row">
+          <span id="sharedMotionStatus" role="status">공동 수집 대기</span>
+          <button id="sharedMotionRetry" type="button" hidden>공동 저장 재시도</button>
+          <button id="sharedMotionDiscard" type="button" hidden>미저장 동작 버리기</button>
+        </div>
+
+        <div class="status-grid">
+          <div>
+            <span>저장 샘플</span>
+            <strong id="sampleCount">0</strong>
+          </div>
+          <div>
+            <span>추적 상태</span>
+            <strong id="trackingState">준비</strong>
+          </div>
+          <div>
+            <span>저장 위치</span>
+            <strong id="storageLocation">컴퓨터 파일</strong>
+          </div>
+        </div>
+      </section>
+      <progress id="captureProgress" max="1" value="0" aria-label="샘플 수집 진행" hidden></progress>
+      <section class="capture-panel" aria-labelledby="captureTitle">
+        <div class="section-head"><h2 id="captureTitle">원본 촬영 · 평가</h2><strong id="captureCount">0개</strong></div>
+        <div class="capture-fields">
+          <label>촬영 세션<input id="captureSession" maxlength="64" /></label>
+          <button id="captureNewSession" type="button">새 촬영 세션</button>
+          <label>자료 구분<select id="captureSplit"><option value="train">학습</option><option value="validation">검증</option><option value="test">최종 평가</option></select></label>
+          <label>촬영 종류<select id="captureKind"><option value="isolated">한 단어</option><option value="continuous">연속 수어</option><option value="rest">휴식</option><option value="non_sign">일상 행동</option><option value="transition">전환 동작</option></select></label>
+          <label class="capture-wide">수어 정답 순서 · 쉼표로 구분<input id="captureSequence" value="안녕하세요" maxlength="1000" /></label>
+          <details class="capture-wide"><summary>단어 구간 정답 · 선택</summary><label>JSON · label, start_ms, end_ms<textarea id="captureSegments" rows="3" spellcheck="false"></textarea></label></details>
+        </div>
+        <label class="capture-consent"><input id="captureConsent" type="checkbox" /> 원본 영상·관절을 이 컴퓨터에 저장하는 데 동의</label>
+        <label class="capture-consent"><input id="captureShareSlrt" type="checkbox" checked /> SLRT 영상 모델에도 자료 전달</label>
+        <div class="button-row">
+          <button id="rawCaptureStart" type="button">원본 영상 촬영</button><button id="rawCaptureStop" type="button" disabled>촬영 종료</button>
+          <button id="rawCaptureRetry" type="button" hidden>다시 저장</button><button id="rawCaptureDiscard" type="button" hidden>미저장 영상 버리기</button>
+          <span id="rawCaptureStatus" role="status">대기</span>
+        </div>
+        <video id="rawCapturePlayback" controls playsinline preload="none" hidden aria-label="최근 저장한 원본 영상"></video>
+        <details><summary>촬영 기록</summary><button id="captureRefresh" type="button">기록 새로고침</button><ul id="captureList"></ul></details>
+        <div class="section-head"><h3>평가 기록</h3><button id="captureEvaluate" type="button">평가 결과 계산</button></div>
+        <pre id="captureEvaluation" role="status">미측정</pre>
+        <div class="section-head"><h3>SLRT 영상 모델 학습</h3><div class="button-row"><button id="slrtSyncBtn" type="button">자료 전달 재시도</button><button id="slrtRefreshBtn" type="button">상태 새로고침</button><button id="slrtTrainBtn" type="button" disabled>SLRT 영상 모델 학습</button></div></div>
+        <p id="slrtSharedStatus" role="status">공동 학습 자료 확인 중</p>
+      </section>
+      <div id="notice" class="notice" hidden>
+        <span id="noticeText" role="status" aria-live="polite"></span>
+        <button id="undoBtn" type="button" hidden>되돌리기</button>
+      </div>
+
+      <section class="samples-panel" aria-labelledby="samplesTitle">
+        <div class="section-head">
+          <h2 id="samplesTitle">저장된 수어</h2>
+          <div class="button-row">
+            <button id="exportBtn" type="button">백업 저장</button>
+            <button id="importBtn" type="button">백업 불러오기</button>
+            <button id="clearBtn" type="button" class="danger">전체 삭제</button>
+          </div>
+        </div>
+        <input id="importFile" type="file" accept=".json,application/json" hidden />
+        <div id="labels" class="sample-list"></div>
+      </section>
+
+      <section class="yolo-panel" aria-labelledby="yoloTitle">
+        <div class="section-head">
+          <div><p class="eyebrow">정지 수어 · 지문자</p><h2 id="yoloTitle">YOLO26 / YOLO11 모델</h2></div>
+          <strong id="yoloState" class="yolo-state">모델 없음</strong>
+        </div>
+        <div class="yolo-controls">
+          <label class="file-control">YOLO ONNX<input id="yoloModelFile" type="file" accept=".onnx,application/onnx" /></label>
+          <label class="file-control">라벨 .txt 또는 .json<input id="yoloLabelsFile" type="file" accept=".txt,.json,text/plain,application/json" /></label>
+          <a href="http://127.0.0.1:5196/" target="_blank" rel="noopener">YOLO 학습실 열기 ↗</a>
+          <button id="yoloLoadBtn" type="button">모델 연결</button>
+          <button id="yoloUnloadBtn" type="button" disabled>연결 해제</button>
+        </div>
+        <p id="yoloResult" class="yolo-result" role="status">지문자 모델 연결 대기</p>
+      </section>
+
+
+    </main>
+    <dialog id="clearDialog" aria-labelledby="clearTitle" aria-describedby="clearDescription">
+      <h2 id="clearTitle">모든 샘플을 삭제할까요?</h2>
+      <p id="clearDescription">컴퓨터에 저장한 샘플이 삭제됩니다. 필요한 데이터는 먼저 백업해 주세요.</p>
+      <div class="button-row">
+        <button id="clearCancel" type="button" autofocus>취소</button>
+        <button id="clearConfirm" type="button" class="danger">전체 삭제</button>
+      </div>
+    </dialog>
+
+    <script src="/vendor/hangul.js"></script>
+    <script type="module" src="/frontend/shoulder-guide.js?v=2"></script>
+<script type="module" src="/frontend/app.js?v=yolo-only-1"></script>
+<script type="module" src="/frontend/sentence_polish.js?v=gemini-auto-700-1"></script>
+<script type="module" src="/frontend/sentence_speech.js?v=1"></script>
+  </body>
+</html>

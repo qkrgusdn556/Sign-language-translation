@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ko">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>YOLO 학습실</title><link rel="stylesheet" href="/yolo-train.css"><link rel="stylesheet" href="/yolo-annotate.css"></head>
+<body><style>
+.photo{position:relative}.photo-select{position:absolute;top:8px;left:8px;display:flex;align-items:center;gap:7px;background:#101214e8;color:#fff;padding:6px 9px;border-radius:5px;cursor:pointer}.photo-select input{width:18px;height:18px;margin:0;accent-color:#9bd9bd}.photo:has(.photo-select input:checked){outline:2px solid #9bd9bd;outline-offset:1px}#deleteSelected{color:#ffb7b1;border-color:#80554f}#selectionCount{color:#9bd9bd;font-size:14px}.dataset>p{font-size:13px;color:#a6b1aa}
+</style><main>
+<header><div><p class="eyebrow">한국 수어 · 정지 사진</p><h1>YOLO 학습실</h1></div><a href="http://127.0.0.1:5194/">수어 인식으로 돌아가기 ↗</a></header>
+<div class="workspace">
+<section aria-label="사진 수집"><div class="camera"><video id="camera" autoplay muted playsinline></video><span id="cameraState">카메라 꺼짐</span></div>
+<div class="toolbar"><button id="start">카메라 켜기</button><button id="stop" disabled>카메라 끄기</button><button id="capture" class="primary" disabled>사진 촬영</button></div>
+<div class="fields"><label>수어 / 지문자 이름<input id="label" maxlength="40" placeholder="예: ㄱ, ㄴ, 대기, 기타" list="labels"><datalist id="labels"></datalist></label><label>자료 구분<select id="split"><option value="train">학습용</option><option value="val">검증용</option></select></label></div>
+<label class="upload">사진 추가<input id="upload" type="file" accept="image/jpeg,image/png,image/webp" multiple></label>
+<p id="notice" role="status" aria-live="polite">연결 중</p></section>
+<section class="training" aria-labelledby="trainingTitle"><h2 id="trainingTitle">학습</h2><label>학습 방식<select id="task"><option value="detect">손 박스 탐지 · YOLO26n</option><option value="classify">기존 사진 분류 · YOLO26n-cls</option></select></label><dl><div><dt>입력</dt><dd id="inputSize">손 박스 · 320 × 320</dd></div><div><dt>사진</dt><dd id="counts">0장</dd></div><div><dt>박스 작업 완료</dt><dd id="annotatedCount">0장</dd></div></dl>
+<label>학습 횟수<input id="epochs" type="number" value="30" min="1" max="200" step="1"></label>
+<p id="modelRequirement" class="warning" hidden>탐지 기본 모델 설치 대기 · 박스 저장 가능</p>
+<div class="toolbar"><button id="train" class="primary">학습 시작</button><button id="cancel" disabled>학습 중단</button></div>
+<strong id="jobState" role="status">대기</strong><progress id="progress" value="0" max="100"></progress><pre id="error" hidden></pre>
+<div id="downloads"></div></section></div>
+<section class="dataset"><div class="section-heading"><h2>저장된 사진</h2><label>표시할 이름<select id="filter"><option value="">전체</option></select></label></div>
+<div class="toolbar"><button id="selectVisible">현재 목록 전체 선택</button><button id="clearSelection" disabled>선택 해제</button><button id="deleteSelected" disabled>선택 사진 삭제</button><span id="selectionCount" role="status">0장 선택</span></div>
+<p>이름을 선택하면 해당 사진만 일괄 선택할 수 있습니다. 이름을 바꾸면 선택은 해제됩니다.</p>
+<div id="summary"></div><div id="gallery" class="gallery"></div></section>
+<section class="history"><h2>학습 기록</h2><div id="history">아직 완료된 학습이 없습니다.</div></section>
+</main>
+<dialog id="annotation"><div class="section-heading"><h2>손 영역 라벨링</h2><button id="closeAnnotation" aria-label="닫기" title="닫기">×</button></div>
+<div class="annotation-layout"><div><canvas id="boxCanvas" aria-label="손 영역 박스 그리기"></canvas><p id="annotationStatus" role="status"></p></div><div>
+<label>박스 글자<input id="boxLabel" maxlength="40" list="labels"></label>
+<div class="box-coordinates"><label>X %<input id="boxX" type="number" min="0" max="100" step="0.1"></label><label>Y %<input id="boxY" type="number" min="0" max="100" step="0.1"></label><label>폭 %<input id="boxW" type="number" min="0.5" max="100" step="0.1"></label><label>높이 %<input id="boxH" type="number" min="0.5" max="100" step="0.1"></label></div>
+<button id="newBox">새 박스</button>
+<label class="check"><input id="background" type="checkbox">대상 없음 (배경)</label>
+<div id="boxList"></div><div class="toolbar"><button id="undoBox" title="되돌리기" aria-label="되돌리기">↶</button><button id="removeBox">선택 박스 삭제</button></div>
+<div class="toolbar"><button id="previousPhoto" title="이전 사진" aria-label="이전 사진">←</button><button id="nextPhoto" title="다음 사진" aria-label="다음 사진">→</button></div>
+<div class="toolbar"><button id="saveBoxes" class="primary">저장</button><button id="saveNext">저장 후 다음</button></div>
+</div></div></dialog>
+<script type="module" src="/shoulder-guide.js?v=2"></script>
+<script type="module" src="/yolo-train.js?v=bulk-delete-1"></script></body></html>

@@ -1,0 +1,15 @@
+.live-page .app-shell{width:min(1560px,calc(100% - 48px));padding:26px 0}
+.live-page .app-header h1{font-size:26px;margin:0}.live-link{color:#94ddc6;text-underline-offset:5px;font-size:14px}
+.live-columns{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(340px,1fr);gap:24px;align-items:start}
+.live-page .stage{display:block}.live-page .video-wrap{border-radius:16px;aspect-ratio:4/3}
+.live-camera-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px}.live-tracking{color:#a1bcb2;font-size:13px}
+.live-jamo-status{margin-top:14px;padding:14px 16px;background:#14231d;border:1px solid #334a3d;border-radius:12px}.live-jamo-status strong{font-size:12px;color:#9fbcaf}.live-jamo-status #yoloResult{font-size:14px;line-height:1.7;min-height:3.4em;margin:8px 0 0;overflow-wrap:anywhere}
+.live-page .sentence-panel{margin:0;padding:24px;border:1px solid #33443c;border-radius:16px;background:#141b18;min-width:0}
+.live-page .sentence-panel .section-head{align-items:start;gap:16px}.live-page .sentence-actions{gap:8px;flex-wrap:wrap}
+.live-page .sentence-output{margin-top:24px}.live-page .sentence-text{font-size:24px;line-height:1.7;min-height:130px;padding:20px;border-radius:12px}
+.live-page .sentence-output:last-child .sentence-text{color:#b9f3dd;background:#10271f}
+.live-page .fingerspell-controls{gap:8px;flex-wrap:wrap}.live-page #fingerspellStatus{flex-basis:100%;font-size:13px}
+.live-page #liveSettings{width:min(760px,calc(100vw - 32px));max-height:85vh;overflow:auto;background:#151c19;color:#f5f3ee;border:1px solid #486454;border-radius:14px;padding:24px}
+#liveSettings::backdrop{background:#000a}#liveSettings>label{display:block;margin:16px 0}#liveSettings .yolo-panel{margin-top:12px}
+.live-page #liveLoading{padding:32px}.live-page .local-badge{font-size:12px}
+@media(max-width:1000px){.live-columns{grid-template-columns:1fr}.live-page .video-wrap{aspect-ratio:16/9}.live-page .app-shell{width:calc(100% - 24px)}.live-page .sentence-text{min-height:90px}.live-page .app-header{flex-wrap:wrap}}
